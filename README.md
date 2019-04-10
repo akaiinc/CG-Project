@@ -1,2 +1,0 @@
-# CG-Project
-CG Work
