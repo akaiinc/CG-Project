@@ -92,7 +92,7 @@ function linkShader(pointsArray,colorsArray)
 
     thetaLoc=gl.getUniformLocation(program,"theta");
 
-    cubeRender(points,gl.TRIANGLES);
+    cubeRender();
     // setInterval(cubeRender(points,gl.TRIANGLES),60);
 }
 
@@ -105,15 +105,15 @@ function quad(a,b,c,d){
 }
 
 
-function cubeRender(array,drawingMode){
+function cubeRender(){
 
     gl.clear( gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     theta[0]+=2.0;
     theta[1]+=4.0;
     theta[2]+=6.0;
     gl.uniform3fv(thetaLoc,flatten(theta));
-    gl.drawArrays( drawingMode, 0, array.length );
+    gl.drawArrays( gl.TRIANGLES, 0, points.length );
     //绘制方式、起始点、点的个数
-    requestAnimationFrame(cubeRender(array,drawingMode));
+    requestAnimFrame(cubeRender);
 }
 
