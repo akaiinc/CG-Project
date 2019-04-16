@@ -69,9 +69,7 @@ function linkShader(pointsArray,colorsArray)
 
     var vbuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vbuffer );
-    gl.bufferData( gl.ARRAY_BUFFER,
-         flatten(pointsArray),
-          gl.STATIC_DRAW );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(pointsArray), gl.STATIC_DRAW );
 
     var vPosition = gl.getAttribLocation( program, "vPosition" );
     gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
@@ -81,9 +79,7 @@ function linkShader(pointsArray,colorsArray)
 
     var cbuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, cbuffer );
-    gl.bufferData( gl.ARRAY_BUFFER,
-         flatten(colorsArray),
-          gl.STATIC_DRAW );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(colorsArray), gl.STATIC_DRAW );
 
     var vColor = gl.getAttribLocation( program, "vColor" );
     gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
@@ -99,7 +95,7 @@ function quad(a,b,c,d){
     var indices=[a,b,c,a,c,d];
     for(var i=0;i<indices.length;i+=1){
         points.push(vertices[indices[i]]);
-        colors.push(vertexColors[indices[i]]);
+        colors.push(vertexColors[a]);
     }
 }
 

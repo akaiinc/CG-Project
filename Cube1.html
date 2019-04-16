@@ -18,13 +18,13 @@
 <script id="vertex-shader" type="x-shader/x-vertex">
 attribute vec4 vPosition;
 attribute  vec4 vColor;
+varying vec4 fColor;
 uniform mat4 modelViewMatrix;
 uniform vec3 theta;
-varying vec4 fColor;
 
 
-void
-main()
+
+void main()
 {
     vec3 angles=radians(theta);
     vec3 c=cos(angles);
@@ -68,7 +68,7 @@ main()
 
 <body>
     <div class="canvas-container">
-        <canvas id="gl-canvas" width="960" height="960">
+        <canvas id="gl-canvas" width="620" height="620">
             Oops ... your browser doesn't support the HTML5 canvas element
         </canvas>
     </div>
