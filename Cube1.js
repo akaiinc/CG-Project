@@ -25,6 +25,21 @@ var standardMatrix= mat4(
 );
 var cubeR;
 
+var isMouseDown = false;
+window.onmousedown = (e) =>{
+    isMouseDown = true;
+    position[0] = e.x, position[1] = e.y
+}
+window.onmouseup = () =>{
+    isMouseDown = false;
+}
+window.onmousemove = fixupdate
+
+window.onload = function init(){
+    glControl.init()
+    draw()
+}
+
 
 /**一下开始主程序 */
 window.onload= function main(){
@@ -213,6 +228,26 @@ function drawDoll(){
     }
     render_2D(pointLine,gl.LINES);
 
+}
+
+/**鼠标控制 */
+function fixupdate(e) {
+    {
+        if (isMouseDown) {
+            if (!position) {
+                position = vec2(e.x, e.y)
+                return
+            }
+            glControl.rotateEye(
+                (e.x - position[0]) / window.innerWidth * 360,
+                (e.y - position[1]) / window.innerHeight * 360)
+            position[0] = e.x, position[1] = e.y
+            glControl.clear()
+            glControl.render(drawableObjs)
+        } else {
+            return
+        }
+    }
 }
 
 function render_2D(points,mode){
