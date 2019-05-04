@@ -25,23 +25,8 @@ var standardMatrix= mat4(
 );
 var cubeR;
 
-var isMouseDown = false;
-window.onmousedown = (e) =>{
-    isMouseDown = true;
-    position[0] = e.x, position[1] = e.y
-}
-window.onmouseup = () =>{
-    isMouseDown = false;
-}
-window.onmousemove = fixupdate
 
-window.onload = function init(){
-    glControl.init()
-    draw()
-}
-
-
-/**一下开始主程序 */
+/**以下开始主程序 */
 window.onload= function main(){
 
     canvas = document.getElementById( "gl-canvas" );
@@ -62,6 +47,7 @@ function linkShader()
     gl.useProgram( program );
 
     drawCube();
+    // drawPedestal();
 
     var vbuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vbuffer );
@@ -131,20 +117,39 @@ function drawCube(){
         vertices[i]=mult(rotY,vertices[i]);
     }
 
-    quad(1,0,3,2);
-    quad(2,3,7,6);
-    quad(3,0,4,7);
-    quad(6,5,1,2);
-    quad(4,5,6,7);
-    quad(5,4,0,1);
+    // quad(1,0,3,2);
+    // quad(2,3,7,6);
+    // quad(3,0,4,7);
+    // quad(6,5,1,2);
+    // quad(4,5,6,7);
+    // quad(5,4,0,1);
 
-    function quad(a,b,c,d){
-        var indices=[a,b,c,a,c,d];
+    quad(vertices,1,0,3,2,-1);
+    quad(vertices,2,3,7,6,-1);
+    quad(vertices,3,0,4,7,-1);
+    quad(vertices,6,5,1,2,-1);
+    quad(vertices,4,5,6,7,-1);
+    quad(vertices,5,4,0,1,-1);
+}
+
+function quad(vertices,a,b,c,d,e){
+
+    var indices=[a,b,c,a,c,d];
+
+    //不指定颜色
+    if(e==-1){
         for(var i=0;i<indices.length;i+=1){
             cubePoints.push(vertices[indices[i]]);
-            cubeCcolors.push(vertexColors[indices[i]]);
+            cubeCcolors.push(vertexColors[a]);
         }
     }
+    else if(e>=0&&e<=7){
+        for(var i=0;i<indices.length;i+=1){
+            cubePoints.push(vertices[indices[i]]);
+            cubeCcolors.push(vertexColors[e]);
+        }
+    }
+
 }
 
 /**画一个底座 */
@@ -174,6 +179,32 @@ function drawPedestal(){
         vec4(-bigR,offsetY-smallH-bigH,-bigR,1.0),
         vec4(-bigR,offsetY-smallH-bigH,bigR,1.0)
     ];
+
+    quad(pedestal,0,3,7,4,-1);
+    quad(pedestal,1,0,4,5,-1);
+    quad(pedestal,1,5,6,2,-1);
+    quad(pedestal,3,2,6,7,-1);
+    quad(pedestal,0,1,2,3,-1);
+    quad(pedestal,8,11,15,12,-1);
+    quad(pedestal,9,8,12,13,-1);
+    quad(pedestal,9,13,14,10,-1);
+    quad(pedestal,11,10,14,15,-1);
+    quad(pedestal,9,10,11,8,-1);
+    quad(pedestal,12,15,14,13,-1);
+
+
+    // quad(pedestal,0,3,7,4,);
+    // quad(pedestal,1,0,4,5,);
+    // quad(pedestal,1,5,6,2,);
+    // quad(pedestal,3,2,6,7,);
+    // quad(pedestal,0,1,2,3,);
+    // quad(pedestal,8,11,15,12,);
+    // quad(pedestal,9,8,12,13,);
+    // quad(pedestal,9,13,14,10,);
+    // quad(pedestal,11,10,14,15,);
+    // quad(pedestal,9,10,11,8,);
+    // quad(pedestal,12,15,14,13,);
+
 }
 
 
@@ -228,26 +259,6 @@ function drawDoll(){
     }
     render_2D(pointLine,gl.LINES);
 
-}
-
-/**鼠标控制 */
-function fixupdate(e) {
-    {
-        if (isMouseDown) {
-            if (!position) {
-                position = vec2(e.x, e.y)
-                return
-            }
-            glControl.rotateEye(
-                (e.x - position[0]) / window.innerWidth * 360,
-                (e.y - position[1]) / window.innerHeight * 360)
-            position[0] = e.x, position[1] = e.y
-            glControl.clear()
-            glControl.render(drawableObjs)
-        } else {
-            return
-        }
-    }
 }
 
 function render_2D(points,mode){
