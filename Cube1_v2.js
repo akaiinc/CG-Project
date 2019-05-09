@@ -5,6 +5,8 @@ var gl;
 var canvas;
 var cubePoints=[];
 var cubeCcolors=[];
+var textcurePoints=[];
+var program;
 var vertexColors=[
     vec4( 0.0, 0.0, 0.0, 1.0 ),  // black
     vec4( 1.0, 21/255, 100/255, 1.0 ),  // red
@@ -43,7 +45,7 @@ window.onload= function main(){
 function linkShader()
 {
 
-    var program = initShaders( gl, "vertex-shader", "fragment-shader" );
+    program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram( program );
 
     drawCube();
@@ -82,8 +84,33 @@ function linkShader()
 
 function cubeRender(){
 
-    gl.clear( gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    var texture = gl.createTexture();
 
+    var image=document.getElementById("texture");
+
+    var tbuffer=gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, tbuffer );
+    gl.bufferData( gl.ARRAY_BUFFER,
+         flatten(textcurePoints),
+          gl.STATIC_DRAW );
+    
+    let attrTexture = gl.getAttribLocation(program, 'vTextCoord')
+    gl.vertexAttribPointer(attrTexture, 2, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(attrTexture)
+    gl.bindTexture( gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB,
+        gl.RGB, gl.UNSIGNED_BYTE, image)
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER,
+        gl.NEAREST_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+
+    let sampler = gl.getUniformLocation(program, 'sampler')
+        gl.uniform1i(sampler, 0)
+
+
+    gl.clear( gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     theta[1]-=2.0;
     gl.uniform3fv(thetaLoc,flatten(theta));
     gl.drawArrays( gl.TRIANGLES, 0, cubePoints.length );
@@ -105,6 +132,7 @@ function drawCube(){
         vec4(-r,-r,-r,1.0),
         vec4(r,-r,-r,1.0)
     ];
+    
 
     var rotY=standardMatrix;
     rotY=mult(rotY,rotateZ(45));
@@ -134,6 +162,12 @@ function drawCube(){
 
 function quad(vertices,a,b,c,d,e){
 
+    const _2dPoints = [
+        vec2(0, 0),
+        vec2(0, 1),
+        vec2(1, 1),
+        vec2(1, 0)
+    ]
     var indices=[a,b,c,a,c,d];
 
     //不指定颜色
@@ -149,7 +183,14 @@ function quad(vertices,a,b,c,d,e){
             cubeCcolors.push(vertexColors[e]);
         }
     }
-
+    textcurePoints.push(
+        _2dPoints[0],
+        _2dPoints[1],
+        _2dPoints[2],
+        _2dPoints[0],
+        _2dPoints[2],
+        _2dPoints[3]
+    )
 }
 
 /**画一个底座 */
