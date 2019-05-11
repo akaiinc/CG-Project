@@ -5,6 +5,8 @@ var gl;
 var canvas;
 var cubePoints=[];
 var cubeCcolors=[];
+var textcurePoints=[];
+var program;
 var vertexColors=[
     vec4( 0.0, 0.0, 0.0, 1.0 ),  // black
     vec4( 1.0, 21/255, 100/255, 1.0 ),  // red
@@ -25,21 +27,6 @@ var standardMatrix= mat4(
 );
 var cubeR;
 
-var isMouseDown = false;
-window.onmousedown = (e) =>{
-    isMouseDown = true;
-    position[0] = e.x, position[1] = e.y
-}
-window.onmouseup = () =>{
-    isMouseDown = false;
-}
-window.onmousemove = fixupdate
-
-window.onload = function init(){
-    glControl.init()
-    draw()
-}
-
 
 /**以下开始主程序 */
 window.onload= function main(){
@@ -49,7 +36,7 @@ window.onload= function main(){
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
-    gl.clearColor( 0.0,0.01,0.0,0.5 );
+    gl.clearColor( 0.0,0.01,0.0,0 );
     gl.enable(gl.DEPTH_TEST);
     linkShader();
 };
@@ -58,10 +45,11 @@ window.onload= function main(){
 function linkShader()
 {
 
-    var program = initShaders( gl, "vertex-shader", "fragment-shader" );
+    program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram( program );
 
     drawCube();
+    // drawPedestal();
 
     var vbuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vbuffer );
@@ -96,8 +84,33 @@ function linkShader()
 
 function cubeRender(){
 
-    gl.clear( gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    var texture = gl.createTexture();
 
+    var image=document.getElementById("texture");
+
+    var tbuffer=gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, tbuffer );
+    gl.bufferData( gl.ARRAY_BUFFER,
+         flatten(textcurePoints),
+          gl.STATIC_DRAW );
+    
+    let attrTexture = gl.getAttribLocation(program, 'vTextCoord')
+    gl.vertexAttribPointer(attrTexture, 2, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(attrTexture)
+    gl.bindTexture( gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB,
+        gl.RGB, gl.UNSIGNED_BYTE, image)
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER,
+        gl.NEAREST_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+
+    let sampler = gl.getUniformLocation(program, 'sampler')
+        gl.uniform1i(sampler, 0)
+
+
+    gl.clear( gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     theta[1]-=2.0;
     gl.uniform3fv(thetaLoc,flatten(theta));
     gl.drawArrays( gl.TRIANGLES, 0, cubePoints.length );
@@ -119,6 +132,7 @@ function drawCube(){
         vec4(-r,-r,-r,1.0),
         vec4(r,-r,-r,1.0)
     ];
+    
 
     var rotY=standardMatrix;
     rotY=mult(rotY,rotateZ(45));
@@ -131,20 +145,52 @@ function drawCube(){
         vertices[i]=mult(rotY,vertices[i]);
     }
 
-    quad(1,0,3,2);
-    quad(2,3,7,6);
-    quad(3,0,4,7);
-    quad(6,5,1,2);
-    quad(4,5,6,7);
-    quad(5,4,0,1);
+    // quad(1,0,3,2);
+    // quad(2,3,7,6);
+    // quad(3,0,4,7);
+    // quad(6,5,1,2);
+    // quad(4,5,6,7);
+    // quad(5,4,0,1);
 
-    function quad(a,b,c,d){
-        var indices=[a,b,c,a,c,d];
+    quad(vertices,1,0,3,2,-1);
+    quad(vertices,2,3,7,6,-1);
+    quad(vertices,3,0,4,7,-1);
+    quad(vertices,6,5,1,2,-1);
+    quad(vertices,4,5,6,7,-1);
+    quad(vertices,5,4,0,1,-1);
+}
+
+function quad(vertices,a,b,c,d,e){
+
+    const _2dPoints = [
+        vec2(0, 0),
+        vec2(0, 1),
+        vec2(1, 1),
+        vec2(1, 0)
+    ]
+    var indices=[a,b,c,a,c,d];
+
+    //不指定颜色
+    if(e==-1){
         for(var i=0;i<indices.length;i+=1){
             cubePoints.push(vertices[indices[i]]);
             cubeCcolors.push(vertexColors[a]);
         }
     }
+    else if(e>=0&&e<=7){
+        for(var i=0;i<indices.length;i+=1){
+            cubePoints.push(vertices[indices[i]]);
+            cubeCcolors.push(vertexColors[e]);
+        }
+    }
+    textcurePoints.push(
+        _2dPoints[0],
+        _2dPoints[1],
+        _2dPoints[2],
+        _2dPoints[0],
+        _2dPoints[2],
+        _2dPoints[3]
+    )
 }
 
 /**画一个底座 */
@@ -174,6 +220,32 @@ function drawPedestal(){
         vec4(-bigR,offsetY-smallH-bigH,-bigR,1.0),
         vec4(-bigR,offsetY-smallH-bigH,bigR,1.0)
     ];
+
+    quad(pedestal,0,3,7,4,-1);
+    quad(pedestal,1,0,4,5,-1);
+    quad(pedestal,1,5,6,2,-1);
+    quad(pedestal,3,2,6,7,-1);
+    quad(pedestal,0,1,2,3,-1);
+    quad(pedestal,8,11,15,12,-1);
+    quad(pedestal,9,8,12,13,-1);
+    quad(pedestal,9,13,14,10,-1);
+    quad(pedestal,11,10,14,15,-1);
+    quad(pedestal,9,10,11,8,-1);
+    quad(pedestal,12,15,14,13,-1);
+
+
+    // quad(pedestal,0,3,7,4,);
+    // quad(pedestal,1,0,4,5,);
+    // quad(pedestal,1,5,6,2,);
+    // quad(pedestal,3,2,6,7,);
+    // quad(pedestal,0,1,2,3,);
+    // quad(pedestal,8,11,15,12,);
+    // quad(pedestal,9,8,12,13,);
+    // quad(pedestal,9,13,14,10,);
+    // quad(pedestal,11,10,14,15,);
+    // quad(pedestal,9,10,11,8,);
+    // quad(pedestal,12,15,14,13,);
+
 }
 
 
@@ -228,26 +300,6 @@ function drawDoll(){
     }
     render_2D(pointLine,gl.LINES);
 
-}
-
-/**鼠标控制 */
-function fixupdate(e) {
-    {
-        if (isMouseDown) {
-            if (!position) {
-                position = vec2(e.x, e.y)
-                return
-            }
-            glControl.rotateEye(
-                (e.x - position[0]) / window.innerWidth * 360,
-                (e.y - position[1]) / window.innerHeight * 360)
-            position[0] = e.x, position[1] = e.y
-            glControl.clear()
-            glControl.render(drawableObjs)
-        } else {
-            return
-        }
-    }
 }
 
 function render_2D(points,mode){
